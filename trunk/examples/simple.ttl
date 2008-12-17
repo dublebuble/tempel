@@ -1,0 +1,21 @@
+<html>
+    # comments can be added in shell format
+    -- or in Lua format
+
+    <head>
+        <title>${title}</title>
+    </head>
+
+    <body>
+~       for person in each(people) do
+            <p>
+		ID is %{person.id}<br />
+		Name is !{person.name}<br />
+		Email is ${lowercase(person.email)}<br />
+            </p>
+
+            <hr />
+~       end
+    </body>
+</html>
+
