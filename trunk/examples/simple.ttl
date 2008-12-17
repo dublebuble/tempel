@@ -2,11 +2,16 @@
     # comments can be added in shell format
     -- or in Lua format
 
+    # all comments are removed from the 
+    # output buffer at template load time
+
     <head>
         <title>${title}</title>
     </head>
 
     <body>
+	# lines beginning with `~' 
+	# are executed as normal Lua code
 ~       for person in each(people) do
             <p>
 		ID is %{person.id}<br />
