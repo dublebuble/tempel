@@ -310,7 +310,9 @@ end
 -- If the first character of a line is a `~', the rest of the line will be a line if executable
 -- Lua code. All other lines are assumed to be plain text and will be echoed directly (after 
 -- substitutions).
---
+-- 
+-- Comments can be added to the templated either with '#' or '--'. All comments are removed
+-- from the template output at loading time.
 --
 -- Template Substitutions:
 --
