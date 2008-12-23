@@ -109,12 +109,12 @@ If {{{epoch}}} is not provided the current system time is used
 
 ==== newstr = replace(str, match, rep) ====
 
-replace all instances of `match' with `rep' in `str'
+replace all instances of {{{match}}} with {{{rep}}} in {{{str}}}
 
 ==== str = join(table, joinstr) ====
 
-joins all the values of `table' into a string separated by `joinstr'
+joins all the values of {{{table}}} into a string separated by {{{joinstr}}}
 
 ==== table = split(str, seperator) ====
 
-splits `str' into a table based split on `seperator'. If `seperator' is '' or nil explodes `str' into a table of individual characters
+splits {{{str}}} into a table based split on {{{seperator}}}. If {{{seperator}}} is {{{''}}} or {{{nil}}} explodes {{{str}}} into a table of individual characters
