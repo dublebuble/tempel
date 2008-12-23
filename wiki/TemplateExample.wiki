@@ -9,7 +9,9 @@
     # output buffer at template load time
 
     <head>
-        <title>${title}</title>
+        # Fallback to default if 'title'
+        # is not set to be replaced
+        <title>${title or 'Site Name'}</title>
     </head>
 
     <body>
