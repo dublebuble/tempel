@@ -6,7 +6,7 @@ A templating library for Lua. Designed to be used to generate HTML from template
 
 = Details =
 
-== Synopsis
+== Synopsis ==
 
 {{{
 require('Tempel')
@@ -18,8 +18,8 @@ func(replace)
 }}}
 
 
-== Methods
+== Methods ==
 
-==== func = Tempel.Load(filename)
+==== func = Tempel.Load(filename) ====
 
 Loads the template from filename, parses it and returns a function. The returned function takes a single table which it uses to replace values inside the template definition.
