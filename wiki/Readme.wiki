@@ -102,10 +102,10 @@ returns the lowercase version of {{{str}}}
 
 ==== str = timestamp([format][,epoch]) ====
 
-returns a timestamp string based on the value of `format'. `format' should be a format string compatible with the POSIX `strftime' function. `epoch' is the unix epoch time to be formatted.
+returns a timestamp string based on the value of {{{format}}}. {{{format}}} should be a format string compatible with the POSIX {{{strftime}}} function. {{{epoch}}} is the UNIX epoch time to be formatted.
 
-If `format' is not provided it defaults to `%c'
-If `epoch' is not provied the current system time is used
+If {{{format}}} is not provided it defaults to {{{%c}}}
+If {{{epoch}}} is not provided the current system time is used
 
 ==== newstr = replace(str, match, rep) ====
 
