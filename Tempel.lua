@@ -329,7 +329,7 @@ end
 --
 --   ${varname} will echo the value of varname as plain text
 --   %{varname} will echo the value of varname as a URI encoded string
---   !{varname} will echo the calue of varname as a string of hexedecimal HTML entities
+--   !{varname} will echo the calue of varname as a string of hexadecimal HTML entities
 --
 -- String transformation functions can be used inside the the substitution declaration, for 
 -- example:
@@ -376,20 +376,20 @@ end
 --	includes the file `filename' into the source of this template
 --
 --   require(filename)
---      loads the file `filename' as Lua source code inth this template
+--      loads the file `filename' as Lua source code in this template
 --
 --   upper = uppercase(str)
---      returns the uppercase version of str
+--      returns the uppercase version of `str'
 --
 --   lower = lowercase(str)
---	returns the lowercase version of str
+--	returns the lowercase version of `str'
 --
 --   str = timestamp([format][,epoch])
 --	returns a timestamp string based on the value of `format'. `format' should
 --	be a format string compatible with the POSIX `strftime' function. `epoch'
 --	is the unix epoch time to be formatted.
 --	If `format' is not provided it defaults to `%c'
---	If `epoch' is not provied the current system time is used
+--	If `epoch' is not provided the current system time is used
 --
 --   newstr = replace(str, match, rep)
 --	replace all instances of `match' with `rep' in `str'
