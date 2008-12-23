@@ -341,7 +341,7 @@ end
 --
 -- Template Built-in Functions:
 --
--- Serveral built-in functions are available from within the template. The functions are:
+-- Several built-in functions are available from within the template. The functions are:
 --
 --   uri_str = uri_encode(str)
 --      returns the URI encoded version of `str'
