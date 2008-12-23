@@ -61,6 +61,7 @@ returns the URI encoded version of `str'
 returns the HTML entity encoded version of `str'
 
 ==== echo(str, ...) ====
+
 echoes values to the output buffer. `str' can be a plain string, or a format string to be used in conjunction with the trailing arguments
 
 ==== str = format(str) ====
@@ -68,6 +69,7 @@ echoes values to the output buffer. `str' can be a plain string, or a format str
 returns the string value of `str', or '' if `str' is nil
 
 ==== substr = substring(str, startpos, len) ====
+
 returns a substring of str starting at `startpos' for `len' characters. if `len' is undefined assume we want start number of characters from the start of the string.
 
 ==== len = length(str) ====
@@ -99,6 +101,7 @@ returns the uppercase version of str
 returns the lowercase version of str
 
 ==== str = timestamp([format][,epoch]) ====
+
 returns a timestamp string based on the value of `format'. `format' should be a format string compatible with the POSIX `strftime' function. `epoch' is the unix epoch time to be formatted.
 
 If `format' is not provided it defaults to `%c'
@@ -113,4 +116,5 @@ replace all instances of `match' with `rep' in `str'
 joins all the values of `table' into a string separated by `joinstr'
 
 ==== table = split(str, seperator) ====
+
 splits `str' into a table based split on `seperator'. If `seperator' is '' or nil explodes `str' into a table of individual characters
