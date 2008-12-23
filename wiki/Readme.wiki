@@ -1,0 +1,25 @@
+#summary One-sentence summary of this page.
+
+= Tempel.lua =
+
+A templating library for Lua. Designed to be used to generate HTML from templates, but can be used for any kind of templating.
+
+= Details =
+
+== Synopsis
+
+{{{
+require('Tempel')
+
+func = Tempel.Load('/path/to/file.template')
+
+replaces = {varname = 'Hello world!'}
+func(replace)
+}}}
+
+
+== Methods
+
+==== func = Tempel.Load(filename)
+
+Loads the template from filename, parses it and returns a function. The returned function takes a single table which it uses to replace values inside the template definition.
