@@ -67,7 +67,7 @@ function Load(filename)
 	    -- a line of Lua code
 	    -- strip the first symbol and save the
 	    -- rest for execution
-            line = string.gsub(line, '^~(.+)$', '%1')
+            line = string.gsub(line, '^~(.*)$', '%1')
             funcstr = funcstr .. line .. '\n'
         elseif string.match(line, '^%s*#') or string.match(line, '^%s*%-%-')then
 	    -- this line is a template comment
@@ -108,14 +108,13 @@ function Load(filename)
 
     fh:close()
 
-    local f = assert(loadstring(funcstr))
+    local f = assert(loadstring(funcstr, filename))
 
     -- this is the function returned as the result
     -- the value of `vars' is the environment
     -- the constructed function executes under
     return function(vars)
 	vars = vars or {}
-	local output = ''
 
 	-- as above
 	vars.uri_encode = uri_encode
@@ -124,13 +123,15 @@ function Load(filename)
 	-- 'prints' a value into output
 	-- supports format strings
         vars.echo = function(format, ...)
-            output = output .. string.format(format, ...)
+            print(string.format(format, ...))
         end
 
 	-- returns the string version of v
 	-- or '' if v is nil
         vars.format = function(v)
-            v = v or ''
+            if v == nil then
+                v = ''
+            end
 
             return tostring(v)
         end
@@ -155,7 +156,7 @@ function Load(filename)
 	    return string.len(tostring(str))
 	end
 
-	-- numerically iterates over a table
+	-- numerically walk over a table
 	-- and returns the value of at each index
 	-- and optionally index
 	-- (ipairs in reverse)
@@ -169,9 +170,9 @@ function Load(filename)
             end
         end
 
-	-- walk the table and return 
+	-- iterate the table and return 
 	-- key/value pairs
-	vars.walk = function(hashtable)
+	vars.pairs = function(hashtable)
 	    hashtable = hashtable or {}
 
 	    local k
@@ -188,9 +189,18 @@ function Load(filename)
 	end
 
 	-- include a file into the source of a template
+	-- this is done at run time, not load time
         vars.include = function(filename)
-            local f = assert(Template(filename))
+            local f = assert(Load(filename))
             f(vars)
+        end
+
+        -- include a file of Lua source code
+        -- into the template
+        vars.require = function(filename)
+            local f = assert(loadfile(filename))
+            setfenv(f, vars)
+            f()
         end
 
 	-- return the uppercase version 
@@ -273,8 +283,6 @@ function Load(filename)
 
         setfenv(f, vars)
         f()
-
-	return output
     end
 end
 
@@ -293,7 +301,7 @@ end
 -- func = Tempel.Load('/path/to/file.template')
 --
 -- replaces = {varname = 'Hello world!'}
--- print(func(replace))
+-- func(replace)
 --
 --
 --
@@ -360,12 +368,15 @@ end
 --      returns an iterator to be used in `for ... in ' which iterates
 --      over table numerically.
 --
---   iter = walk(table)
+--   iter = pairs(table)
 --	returns an iterator to be used in `for ... in ' which iterates over
---	table by keyname
+--	table by keyname/value
 --
 --   include(filename)
 --	includes the file `filename' into the source of this template
+--
+--   require(filename)
+--      loads the file `filename' as Lua source code inth this template
 --
 --   upper = uppercase(str)
 --      returns the uppercase version of str

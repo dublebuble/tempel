@@ -24,4 +24,4 @@ local replace = {
 
 -- run the function `f', substituting
 -- values from the table `replace'
-print(f(replace))
+f(replace)
