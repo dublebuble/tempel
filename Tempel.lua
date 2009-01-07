@@ -25,6 +25,53 @@ local os = require('os')
 local table = require('table')
 local string = require('string')
 
+local function json_encode(data)
+    if data == nil then
+        return 'null'
+    end
+
+    local function _store(obj)
+        local str = ''
+        local t = type(obj)
+
+        if t == 'string' then
+           str = string.format('%q', obj)
+        elseif t == 'number' then
+            str = tostring(obj)
+        elseif t == 'boolean' then
+            str = tostring(obj)
+        elseif t == 'table' then
+            local d = {}
+
+            if #obj == table.maxn(obj) and #obj > 0 then
+                -- array
+                for i in ipairs(obj) do
+                    d[i] = _store(rawget(obj, i))
+                end
+
+                str = '[' .. table.concat(d, ',') .. ']'
+            else
+                for k in pairs(obj) do
+                    local ks = _store(k)
+                    local vs = _store(rawget(obj, k))
+
+                    table.insert(d, ks .. '=' .. vs)
+                end
+
+                str = '{' .. table.concat(d, ',') .. '}'
+            end
+        elseif t == nil then
+            str = 'null'
+        end
+
+        return str or ''
+    end
+
+    local str = _store(data)
+    
+    return str
+end
+
 local function uri_encode(str)
     str = string.gsub(str, '[^a-zA-Z0-9 *-._]', function(c)
         return string.format('%%%02x', tonumber(string.byte(c)))
@@ -45,7 +92,7 @@ local function uri_decode(str)
 end
 
 local function html_encode(str)
-    str = string.gsub(str, '.', function(c)
+    str = string.gsub(str, '([^\n\r\t !\#\$%%\(-;=?-~])', function(c)
         return string.format('&#x%02X;', tonumber(string.byte(c)))
     end)
     return str
@@ -77,21 +124,21 @@ function Load(filename)
 	    -- value substitutions on it
             local subs = {}
 
-            line = string.gsub(line, '${(.-)}', function(s)
-		-- ${varname}, echo it back as plain text
-                table.insert(subs, string.format('format(%s)', s))
-                return '%s'
-            end)
+            line = string.gsub(line, '([$%%!%*]){(.-)}', function(t, s)
+                if t == '$' then
+                    -- ${varname}, echo it back as plain text
+                    table.insert(subs, string.format('format(%s)', s))
+                elseif t == '%' then
+                    -- %{varname}, echo back after URI encoding
+                    table.insert(subs, string.format('uri_encode(format(%s))', s))
+                elseif t == '!' then
+                    -- !{varname}, echo back after HTML entity encoding
+                    table.insert(subs, string.format('html_encode(format(%s))', s))
+                elseif t == '*' then
+                    -- *{varname}, echo back after JSON encoding
+                    table.insert(subs, string.format('json_encode(%s)', s))
+                end
 
-            line = string.gsub(line, '%%{(.-)}', function(s)
-		-- %{varname}, echo back after URI encoding
-                table.insert(subs, string.format('uri_encode(format(%s))', s))
-                return '%s'
-            end)
-
-            line = string.gsub(line, '!{(.-)}', function(s)
-		-- !{varname}, echo back after HTML entity encoding
-                table.insert(subs, string.format('html_encode(format(%s))', s))
                 return '%s'
             end)
 
@@ -119,6 +166,7 @@ function Load(filename)
 	-- as above
 	vars.uri_encode = uri_encode
 	vars.html_encode = html_encode
+	vars.json_encode = json_encode
 
 	-- 'prints' a value into output
 	-- supports format strings
@@ -226,6 +274,13 @@ function Load(filename)
 	    return string.gsub(str, match, rep)
 	end
 
+        -- finds the index of `match' inside of `str'
+        -- starting at `startpos' (or 1)
+        vars.index = function(str, match, startpos)
+            local s,e = string.find(str, match, startpos or 1, true)
+            return s,e
+        end
+
 	-- joins a table into a string
 	vars.join = function(...)
 	    return table.concat(...)
@@ -281,6 +336,24 @@ function Load(filename)
             return res
 	end
 
+        -- insert value into table
+        vars.insert = function(...)
+            table.insert(...)
+        end
+
+        -- remove element from table
+        -- returning the value of the removed
+        -- element
+        vars.remove = function(...)
+            return table.remove(...)
+        end
+
+        -- return the number of elements
+        -- in the table
+        vars.size = function(t)
+            return table.maxn(t or {})
+        end
+
         setfenv(f, vars)
         f()
     end
@@ -329,7 +402,8 @@ end
 --
 --   ${varname} will echo the value of varname as plain text
 --   %{varname} will echo the value of varname as a URI encoded string
---   !{varname} will echo the calue of varname as a string of hexadecimal HTML entities
+--   !{varname} will echo the value of varname as a string of hexadecimal HTML entities
+--   *{varname} will echo the value of varname as a JSON encoded string
 --
 -- String transformation functions can be used inside the the substitution declaration, for 
 -- example:
@@ -348,6 +422,9 @@ end
 --
 --   html_str = html_encode(str)
 --	returns the HTML entity encoded version of `str'
+--
+--   json_str = json_encode(obj)
+--	returns the JSON encode version of `obj'
 --
 --   echo(str, ...)
 --	echoes values to the output buffer. `str' can be a plain string, or a
@@ -394,9 +471,27 @@ end
 --   newstr = replace(str, match, rep)
 --	replace all instances of `match' with `rep' in `str'
 --
+--   start,end = index(str, match[, startpos])
+--      finds the first occurence of the string `match' in `str' at or after position
+--      `startpos' (or 1). If `match' is found returns the indices inside `str', otherwise
+--      returns `nil'
+--
 --   str = join(table, joinstr)
 --	joins all the values of `table' into a string separated by `joinstr'
 --
 --   table = split(str, seperator)
 --	splits `str' into a table based split on `seperator'.
 --	If `seperator' is '' or nil explodes `str' into a table of individual characters
+--
+--   insert(t, [pos,] value)
+--      inserts element value at position pos in table `t', shifting up other elements to open 
+--      space, if necessary. The default value for `pos' is n+1, where n is the size of `t'
+--
+--   remove(t [, pos])
+--      removes from `t' the element at position `pos', shifting down other elements to 
+--      close the space, if necessary. Returns the value of the removed element. The default 
+--      value for `pos' is n, where n is the size of the `t'
+--
+--   num_elements = size(t)
+--      returns the number of elements in `t'
+
