@@ -26,8 +26,56 @@ local table = require('table')
 local string = require('string')
 
 local function json_encode(data)
-    if data == nil then
-        return 'null'
+    local function isArray(val)
+        if type(val.n) == 'number' and math.floor(val.n) == val.n and val.n >= 1 then
+            return true
+        end
+
+        local len = #val
+        for k,v in pairs(val) do
+            if type(k) == 'number' and select(2, math.modf(k)) == 0 and 1<=k then
+                if k > len then
+                    return false
+                end
+            else
+                return false
+            end
+        end
+
+        return true
+    end
+
+    local enc = {
+        ['\\'] = '\\\\',
+        ['"'] = '\\"',
+        ['\n'] = '\\n',
+        ['\t'] = '\\t',
+        ['\b'] = '\\b',
+        ['\f'] = '\\f',
+        ['\r'] = '\\r',
+        ['/'] = '\\/',
+    }
+
+    for i = 1, 255 do
+        local c = string.char(i)
+
+        if c:match('%c') and not enc[c] then
+            enc[c] = string.format('\\u%.4X', i)
+        end
+    end
+
+    local function encodestr(str)
+        return string.format('"%s"', string.gsub(tostring(str), '[\\"/%c%z]', enc))
+    end
+
+    local function _storekey(key)
+        local t = type(key)
+
+        if t == 'string' or t == 'boolean' or t == 'number' then
+            return encodestr(key)
+        end
+
+        error(string.format("Cannot use type `%s' as an index", t))
     end
 
     local function _store(obj)
@@ -35,7 +83,7 @@ local function json_encode(data)
         local t = type(obj)
 
         if t == 'string' then
-           str = string.format('%q', obj)
+           str = encodestr(obj)
         elseif t == 'number' then
             str = tostring(obj)
         elseif t == 'boolean' then
@@ -43,24 +91,24 @@ local function json_encode(data)
         elseif t == 'table' then
             local d = {}
 
-            if #obj == table.maxn(obj) and #obj > 0 then
+            if isArray(obj) and #obj > 0 then
                 -- array
-                for i in ipairs(obj) do
+                for i =1, (obj.n or #obj) do
                     d[i] = _store(rawget(obj, i))
                 end
 
                 str = '[' .. table.concat(d, ',') .. ']'
             else
                 for k in pairs(obj) do
-                    local ks = _store(k)
+                    local ks = _storekey(k)
                     local vs = _store(rawget(obj, k))
 
-                    table.insert(d, ks .. '=' .. vs)
+                    table.insert(d, ks .. ':' .. vs)
                 end
 
                 str = '{' .. table.concat(d, ',') .. '}'
             end
-        elseif t == nil then
+        elseif t == 'nil' then
             str = 'null'
         end
 
