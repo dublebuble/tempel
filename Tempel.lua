@@ -132,6 +132,7 @@ end
 
 local function uri_decode(str)
     str = string.gsub(str, '+', ' ')
+
     str = string.gsub(str, '%%(%x%x)', function(h)
         return string.char(tonumber(h, 16))
     end)
@@ -143,6 +144,7 @@ local function html_encode(str)
     str = string.gsub(str, '([^\n\r\t !\#\$%%\(-;=?-~])', function(c)
         return string.format('&#x%02X;', tonumber(string.byte(c)))
     end)
+
     return str
 end
 
@@ -150,6 +152,7 @@ local function html_decode(str)
     str = string.gsub(str, '&#x(%X%X);', function(h)
         return string.char(tonumber(h, 16))
     end)
+
     return str
 end
 
@@ -159,17 +162,17 @@ function Load(filename)
     local funcstr = ''
     for line in fh:lines() do
         if string.match(line, '^~') then
-	    -- a line of Lua code
-	    -- strip the first symbol and save the
-	    -- rest for execution
+            -- a line of Lua code
+            -- strip the first symbol and save the
+            -- rest for execution
             line = string.gsub(line, '^~(.*)$', '%1')
             funcstr = funcstr .. line .. '\n'
         elseif string.match(line, '^%s*#') or string.match(line, '^%s*%-%-')then
-	    -- this line is a template comment
-	    -- skip it for compilation
+	        -- this line is a template comment
+	        -- skip it for compilation
         else
-	    -- this is template text, we'll want to do
-	    -- value substitutions on it
+	        -- this is template text, we'll want to do
+	        -- value substitutions on it
             local subs = {}
 
             line = string.gsub(line, '([$%%!%*]){(.-)}', function(t, s)
@@ -190,12 +193,12 @@ function Load(filename)
                 return '%s'
             end)
 
-	    line = line .. '\n'
+	        line = line .. '\n'
             if table.maxn(subs) > 0 then
-		-- echo back the line with a list of variables to substitute
+		        -- echo back the line with a list of variables to substitute
                 funcstr = funcstr .. string.format('echo(%q, %s)', line, table.concat(subs, ', ')) .. '\n'
             else
-		-- not substitutions found, echo back the line
+		        -- not substitutions found, echo back the line
                 funcstr = funcstr .. string.format('echo(%q)', line) .. '\n'
             end
         end
@@ -209,21 +212,21 @@ function Load(filename)
     -- the value of `vars' is the environment
     -- the constructed function executes under
     return function(vars)
-	vars = vars or {}
+        vars = vars or {}
 
-	-- as above
-	vars.uri_encode = uri_encode
-	vars.html_encode = html_encode
-	vars.json_encode = json_encode
+        -- as above
+        vars.uri_encode = uri_encode
+        vars.html_encode = html_encode
+        vars.json_encode = json_encode
 
-	-- 'prints' a value into output
-	-- supports format strings
+        -- 'prints' a value into output
+        -- supports format strings
         vars.echo = function(format, ...)
             print(string.format(format, ...))
         end
 
-	-- returns the string version of v
-	-- or '' if v is nil
+        -- returns the string version of v
+        -- or '' if v is nil
         vars.format = function(v)
             if v == nil then
                 v = ''
@@ -232,33 +235,33 @@ function Load(filename)
             return tostring(v)
         end
 
-	-- returns a substring of str
-	-- starting at start for len characters
-	-- if len is undefined assume we want
-	-- start number of characters from the
-	-- start of the string
-	vars.substring = function(str, start, len)
-	    if len == nil then
-		len = start
-		start = 1
-	    end
+        -- returns a substring of str
+        -- starting at start for len characters
+        -- if len is undefined assume we want
+        -- start number of characters from the
+        -- start of the string
+        vars.substring = function(str, start, len)
+            if len == nil then
+                len = start
+                start = 1
+            end
 
-	    return string.sub(str, start, len)
-	end
+            return string.sub(str, start, len)
+        end
 
-	-- returns the length of a string
-	-- in characters
-	vars.length = function(str)
-	    return string.len(tostring(str))
-	end
+        -- returns the length of a string
+        -- in characters
+        vars.length = function(str)
+            return string.len(tostring(str))
+        end
 
-	-- numerically walk over a table
-	-- and returns the value of at each index
-	-- and optionally index
-	-- (ipairs in reverse)
+        -- numerically walk over a table
+        -- and returns the value of at each index
+        -- and optionally index
+        -- (ipairs in reverse)
         vars.each = function(array)
             local i = 0
-	    array = array or {}
+            array = array or {}
 
             return function()
                 i = i + 1
@@ -266,26 +269,26 @@ function Load(filename)
             end
         end
 
-	-- iterate the table and return 
-	-- key/value pairs
-	vars.pairs = function(hashtable)
-	    hashtable = hashtable or {}
+        -- iterate the table and return 
+        -- key/value pairs
+        vars.pairs = function(hashtable)
+            hashtable = hashtable or {}
 
-	    local k
+            local k
 
-	    return function()
-		k = next(hashtable, k)
+            return function()
+                k = next(hashtable, k)
 
-		if k == nil then
-		    return nil
-		end
+                if k == nil then
+                    return nil
+                end
 
-		return k,hashtable[k]
-	    end
-	end
+                return k,hashtable[k]
+            end
+        end
 
-	-- include a file into the source of a template
-	-- this is done at run time, not load time
+        -- include a file into the source of a template
+        -- this is done at run time, not load time
         vars.include = function(filename)
             local f = assert(Load(filename))
             f(vars)
@@ -299,28 +302,39 @@ function Load(filename)
             f()
         end
 
-	-- return the uppercase version 
-	-- of str
+        -- return the uppercase version 
+        -- of str
         vars.uppercase = function(str)
-	    return string.upper(str)
+            return string.upper(str)
         end
 
-	-- return the lowercase version
-	-- of str
-	vars.lowercase = function(str)
-	    return string.lower(str)
-	end
+        -- return the lowercase version
+        -- of str
+        vars.lowercase = function(str)
+            return string.lower(str)
+        end
 
-	-- returns a timestamp 
-	vars.timestamp = function(...)
-	    return os.date(...)
-	end
+        -- returns a timestamp 
+        vars.timestamp = function(...)
+            return os.date(...)
+        end
 
-	-- replace all instances of `match' with `rep'
-	-- in str
-	vars.replace = function(str, match, rep)
-	    return string.gsub(str, match, rep)
-	end
+        -- replace all instances of `match' with `rep'
+        -- in str
+        vars.replace = function(str, match, rep)
+            return string.gsub(str, match, rep)
+        end
+
+        -- generate a string from a format string
+        vars.sprintf = function(...)
+            return string.format(...)
+        end
+
+        -- casts a value into a number
+        -- returns `nil' the the cast is impossible 
+        vars.tonumber = function(val)
+            return tonumber(val)
+        end
 
         -- finds the index of `match' inside of `str'
         -- starting at `startpos' (or 1)
@@ -329,13 +343,13 @@ function Load(filename)
             return s,e
         end
 
-	-- joins a table into a string
-	vars.join = function(...)
-	    return table.concat(...)
-	end
+        -- joins a table into a string
+        vars.join = function(...)
+            return table.concat(...)
+        end
 
-	-- splits a string into a table
-	vars.split = function(str, sep)
+        -- splits a string into a table
+        vars.split = function(str, sep)
             local res = {}
             local offset = 1
 
@@ -382,7 +396,7 @@ function Load(filename)
             until string.len(str) == 0
 
             return res
-	end
+        end
 
         -- insert value into table
         vars.insert = function(...)
@@ -469,36 +483,36 @@ end
 --      returns the URI encoded version of `str'
 --
 --   html_str = html_encode(str)
---	returns the HTML entity encoded version of `str'
+--	    returns the HTML entity encoded version of `str'
 --
 --   json_str = json_encode(obj)
---	returns the JSON encode version of `obj'
+--	    returns the JSON encode version of `obj'
 --
 --   echo(str, ...)
---	echoes values to the output buffer. `str' can be a plain string, or a
---	format string to be used in conjunction with the trailing arguments
+--	    echoes values to the output buffer. `str' can be a plain string, or a
+--	    format string to be used in conjunction with the trailing arguments
 --
 --   str = format(str)
---	returns the string value of `str', or '' if `str' is nil
+--	    returns the string value of `str', or '' if `str' is nil
 --
 --   substr = substring(str, startpos, len)
---	returns a substring of str starting at `startpos' for `len' characters.
---	if `len' is undefined assume we want start number of characters from the 
---	start of the string.
+--	    returns a substring of str starting at `startpos' for `len' characters.
+--	    if `len' is undefined assume we want start number of characters from the 
+--	    start of the string.
 --
 --   len = length(str)
---	returns the length of `str' in characters
+--	    returns the length of `str' in characters
 --
 --   iter = each(table)
 --      returns an iterator to be used in `for ... in ' which iterates
 --      over table numerically.
 --
 --   iter = pairs(table)
---	returns an iterator to be used in `for ... in ' which iterates over
---	table by keyname/value
+--	    returns an iterator to be used in `for ... in ' which iterates over
+--	    table by keyname/value
 --
 --   include(filename)
---	includes the file `filename' into the source of this template
+--	    includes the file `filename' into the source of this template
 --
 --   require(filename)
 --      loads the file `filename' as Lua source code in this template
@@ -507,17 +521,23 @@ end
 --      returns the uppercase version of `str'
 --
 --   lower = lowercase(str)
---	returns the lowercase version of `str'
+--	    returns the lowercase version of `str'
 --
 --   str = timestamp([format][,epoch])
---	returns a timestamp string based on the value of `format'. `format' should
---	be a format string compatible with the POSIX `strftime' function. `epoch'
---	is the unix epoch time to be formatted.
---	If `format' is not provided it defaults to `%c'
---	If `epoch' is not provided the current system time is used
+--	    returns a timestamp string based on the value of `format'. `format' should
+--	    be a format string compatible with the POSIX `strftime' function. `epoch'
+--	    is the unix epoch time to be formatted.
+--	    If `format' is not provided it defaults to `%c'
+--	    If `epoch' is not provided the current system time is used
 --
 --   newstr = replace(str, match, rep)
---	replace all instances of `match' with `rep' in `str'
+--	    replace all instances of `match' with `rep' in `str'
+--
+--	 str = sprintf(format, ...)
+--      creates a string based on a format string and arguments
+--
+--   num = tonumber(val)
+--      casts val to a number, returning nil if the cast is impossible
 --
 --   start,end = index(str, match[, startpos])
 --      finds the first occurence of the string `match' in `str' at or after position
@@ -525,11 +545,11 @@ end
 --      returns `nil'
 --
 --   str = join(table, joinstr)
---	joins all the values of `table' into a string separated by `joinstr'
+--	    joins all the values of `table' into a string separated by `joinstr'
 --
 --   table = split(str, seperator)
---	splits `str' into a table based split on `seperator'.
---	If `seperator' is '' or nil explodes `str' into a table of individual characters
+--	    splits `str' into a table based split on `seperator'.
+--	    If `seperator' is '' or nil explodes `str' into a table of individual characters
 --
 --   insert(t, [pos,] value)
 --      inserts element value at position pos in table `t', shifting up other elements to open 
